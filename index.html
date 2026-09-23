@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function() {
+        var target = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
+        if (!target) return;
+
+        // 1. Ensure fetch is configurable and writable
+        try {
+          var originalFetch = target.fetch;
+          if (originalFetch) {
+            Object.defineProperty(target, 'fetch', {
+              get: function() {
+                return originalFetch;
+              },
+              set: function(fn) {
+                originalFetch = fn;
+              },
+              configurable: true,
+              enumerable: true
+            });
+          }
+        } catch (e) {
+          // ignore configuration errors
+        }
+
+        // Helper to check if an error is an abort/cancellation
+        function isAbortError(err, msg) {
+          var text = String(msg || (err && (err.message || err)) || '').toLowerCase();
+          var name = (err && err.name) || '';
+          var code = (err && err.code) || '';
+          return (
+            name === 'AbortError' ||
+            code === 'auth/popup-closed-by-user' ||
+            code === 'auth/cancelled-popup-request' ||
+            text.indexOf('aborted a request') !== -1 ||
+            text.indexOf('user aborted') !== -1 ||
+            text.indexOf('cannot set property fetch') !== -1
+          );
+        }
+
+        // 2. Intercept console.error to filter out benign abort messages
+        try {
+          var origConsoleError = console.error;
+          console.error = function() {
+            for (var i = 0; i < arguments.length; i++) {
+              var arg = arguments[i];
+              if (isAbortError(arg, (arg && arg.message) || arg)) {
+                return;
+              }
+            }
+            return origConsoleError.apply(console, arguments);
+          };
+        } catch (e) {}
+
+        // 3. Early capture-phase event listeners to suppress abort errors
+        try {
+          target.addEventListener('unhandledrejection', function(event) {
+            var reason = event && event.reason;
+            if (isAbortError(reason)) {
+              if (typeof event.preventDefault === 'function') event.preventDefault();
+              if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+              return true;
+            }
+          }, true);
+
+          target.addEventListener('error', function(event) {
+            var err = event && event.error;
+            var msg = (event && event.message) || '';
+            if (isAbortError(err, msg)) {
+              if (typeof event.preventDefault === 'function') event.preventDefault();
+              if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+              return true;
+            }
+          }, true);
+        } catch (e) {}
+
+        // 4. Wrap addEventListener so future listeners also ignore abort errors
+        try {
+          var origAddEventListener = target.addEventListener;
+          target.addEventListener = function(type, listener, options) {
+            if ((type === 'unhandledrejection' || type === 'error') && typeof listener === 'function') {
+              var wrapped = function(event) {
+                var reason = type === 'unhandledrejection' ? (event && event.reason) : (event && event.error);
+                var msg = (event && event.message) || '';
+                if (isAbortError(reason, msg)) {
+                  if (typeof event.preventDefault === 'function') event.preventDefault();
+                  if (typeof event.stopImmediatePropagation === 'function') event.stopImmediatePropagation();
+                  return true;
+                }
+                return listener.apply(this, arguments);
+              };
+              return origAddEventListener.call(this, type, wrapped, options);
+            }
+            return origAddEventListener.apply(this, arguments);
+          };
+        } catch (e) {}
+
+        // 5. Intercept onerror and onunhandledrejection property setters
+        try {
+          var _onerror = null;
+          Object.defineProperty(target, 'onerror', {
+            get: function() { return _onerror; },
+            set: function(fn) {
+              if (typeof fn !== 'function') {
+                _onerror = fn;
+                return;
+              }
+              _onerror = function(message, source, lineno, colno, error) {
+                if (isAbortError(error, message)) {
+                  return true;
+                }
+                return fn.apply(this, arguments);
+              };
+            },
+            configurable: true,
+            enumerable: true
+          });
+
+          var _onunhandledrejection = null;
+          Object.defineProperty(target, 'onunhandledrejection', {
+            get: function() { return _onunhandledrejection; },
+            set: function(fn) {
+              if (typeof fn !== 'function') {
+                _onunhandledrejection = fn;
+                return;
+              }
+              _onunhandledrejection = function(event) {
+                var reason = event && event.reason;
+                if (isAbortError(reason)) {
+                  if (event && typeof event.preventDefault === 'function') event.preventDefault();
+                  return true;
+                }
+                return fn.apply(this, arguments);
+              };
+            },
+            configurable: true,
+            enumerable: true
+          });
+        } catch (e) {}
+      })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HomeLuxe Real Estate | Find Your Perfect Home</title>
+    <meta name="description" content="Discover exceptional properties, luxury homes, apartments, and plots. Browse, list, and book property viewings with HomeLuxe Real Estate." />
+    <meta property="og:title" content="HomeLuxe Real Estate | Find Your Perfect Home" />
+    <meta property="og:description" content="Discover exceptional properties, luxury homes, apartments, and plots. Browse, list, and book property viewings with HomeLuxe Real Estate." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+

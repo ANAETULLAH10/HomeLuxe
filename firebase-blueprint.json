@@ -1,0 +1,124 @@
+{
+  "entities": {
+    "property": {
+      "title": "Property",
+      "description": "A real estate property listing",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string", "enum": ["House", "Apartment", "Plot"] },
+        "type": { "type": "string", "enum": ["sale", "rent"] },
+        "price": { "type": "number" },
+        "beds": { "type": "number" },
+        "baths": { "type": "number" },
+        "sqft": { "type": "number" },
+        "imageUrl": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "sellerName": { "type": "string" },
+        "sellerEmail": { "type": "string" },
+        "sellerPhone": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["title", "category", "type", "price", "sellerId", "sellerName", "sellerEmail", "createdAt"]
+    },
+    "booking": {
+      "title": "ViewingBooking",
+      "description": "A scheduled property viewing appointment",
+      "type": "object",
+      "properties": {
+        "propertyId": { "type": "string" },
+        "propertyTitle": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "userPhone": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "date": { "type": "string" },
+        "timeSlot": { "type": "string" },
+        "tourType": { "type": "string", "enum": ["in-person", "video"] },
+        "status": { "type": "string", "enum": ["confirmed", "pending", "cancelled"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["propertyId", "propertyTitle", "userName", "userEmail", "date", "timeSlot", "createdAt"]
+    },
+    "inquiry": {
+      "title": "AgentInquiry",
+      "description": "A direct message or inquiry sent to a property listing owner/agent",
+      "type": "object",
+      "properties": {
+        "propertyId": { "type": "string" },
+        "propertyTitle": { "type": "string" },
+        "propertyAddress": { "type": "string" },
+        "propertyPrice": { "type": "number" },
+        "sellerId": { "type": "string" },
+        "sellerName": { "type": "string" },
+        "sellerEmail": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderEmail": { "type": "string" },
+        "senderPhone": { "type": "string" },
+        "subject": { "type": "string" },
+        "message": { "type": "string" },
+        "status": { "type": "string", "enum": ["sent", "read", "replied"] },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["propertyId", "propertyTitle", "sellerId", "sellerName", "sellerEmail", "senderName", "senderEmail", "message", "createdAt"]
+    },
+    "favorite": {
+      "title": "Favorite",
+      "description": "User saved property favorite",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "propertyId": { "type": "string" }
+      },
+      "required": ["userId", "propertyId"]
+    },
+    "subscriber": {
+      "title": "Subscriber",
+      "description": "Newsletter subscriber",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "subscribedAt": { "type": "number" }
+      },
+      "required": ["email", "subscribedAt"]
+    },
+    "user": {
+      "title": "UserProfile",
+      "description": "Registered user profile details",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "displayName": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/properties/{propertyId}": {
+      "schema": "property",
+      "description": "Collection of all property listings"
+    },
+    "/bookings/{bookingId}": {
+      "schema": "booking",
+      "description": "Collection of booked property viewings"
+    },
+    "/inquiries/{inquiryId}": {
+      "schema": "inquiry",
+      "description": "Collection of contact inquiries sent to listing agents"
+    },
+    "/favorites/{favoriteId}": {
+      "schema": "favorite",
+      "description": "User favorite property records"
+    },
+    "/subscribers/{subscriberId}": {
+      "schema": "subscriber",
+      "description": "Newsletter subscriber emails"
+    },
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "Registered user account records"
+    }
+  }
+}
